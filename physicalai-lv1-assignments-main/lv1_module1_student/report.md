@@ -202,11 +202,11 @@ SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{seria
 
 ## 문제 3
 ### **3.1. 저장소 URL/PR URL**
-- 저장소 URL: https://github.com/SpartaPA/gyujin_assignment.git
-- PR URL: https://github.com/SpartaPA/gyujin_assignment/pull/1
+- 저장소 URL: https://github.com/SpartaPA/physicalai-lv1-gyujinsim
+- PR URL: https://github.com/SpartaPA/physicalai-lv1-gyujinsim/pull/1
 
 ### **3.2. PR 리뷰 코멘트와 반영 커밋
-PR 링크: https://github.com/SpartaPA/gyujin_assignment/pull/1
+PR 링크: https://github.com/SpartaPA/physicalai-lv1-gyujinsim/pull/1
 
 ### **3.3. 충돌이 난 파일과 줄**
 - <<<<<<<: 현재 브랜치
