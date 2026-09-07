@@ -62,8 +62,17 @@ class CoordinateChain:
         root 에 연결되어 있지 않으면 KeyError.
         """
         # TODO: 문제 6-1
-        raise NotImplementedError("_path_to_root 를 구현하세요")
+        path = [frame]
+        current = frame
 
+        while current != self.root:
+            if current not in self._parent:
+                raise KeyError("root에 연결되어 있지 않음")
+            current = self._parent[current]
+            path.append(current)
+
+        return path
+        
     def T_from_root(self, frame: str) -> np.ndarray:
         """root 기준 frame 의 자세 T(root <- frame).
 
@@ -72,15 +81,26 @@ class CoordinateChain:
             T(base<-camera) = T(base<-link) @ T(link<-camera)
         """
         # TODO: 문제 6-1
-        raise NotImplementedError("T_from_root 를 구현하세요")
+        path = self._path_to_root(frame)
+        T_result = np.eye(4)
 
+        for i in range(len(path)-1):
+            child = path[i]
+            parent = path[i+1]
+
+            T_path = self.get(parent,child)
+
+            T_result = T_path @ T_result
+
+        return T_result
+        
     def T(self, target: str, source: str) -> np.ndarray:
         """source 좌표를 target 좌표로 바꾸는 변환 T(target <- source).
 
         힌트: T(target<-source) = inv(T(root<-target)) @ T(root<-source)
         """
         # TODO: 문제 6-1
-        raise NotImplementedError("T 를 구현하세요")
+        return inv_T(self.T_from_root(target)) @ self.T_from_root(source)
 
     def transform(self, target: str, source: str, P, w: float = 1.0) -> np.ndarray:
         """source 프레임의 점(w=1) 또는 방향(w=0)을 target 프레임으로 변환한다.
@@ -88,12 +108,20 @@ class CoordinateChain:
         (3,) 와 (N,3) 을 모두 지원해야 하고, **반복문을 쓰지 않는다**.
         """
         # TODO: 문제 6-2
-        raise NotImplementedError("transform 을 구현하세요")
-
+        P = np.asarray(P)
+        T_src_tgt = self.T(target,source)
+        if P.ndim==1:
+            P = np.append(P,w)
+            return (P @ T_src_tgt.T)[:3]
+        elif P.ndim==2:
+            N = P.shape[0]
+            back = np.full((N,1),w)
+            P = np.hstack([P,back])
+            return (P @ T_src_tgt.T)[:,:3]
+        
     def axis_angle(self, target: str, source: str):
         """T(target <- source) 의 회전 부분에서 회전축과 회전각을 복원한다."""
         # TODO: 문제 6-4
-        raise NotImplementedError("axis_angle 을 구현하세요")
 
 
 def default_chain() -> CoordinateChain:
@@ -109,8 +137,10 @@ def default_chain() -> CoordinateChain:
     #   T_base_link   = make_T(rot_z(...), [...])
     #   T_link_camera = make_T(rot_y(...) @ rot_x(...), [...])
     #   return CoordinateChain("base").add(...).add(...)
-    raise NotImplementedError("default_chain 을 구현하세요")
-
+    T_base_link = make_T(rot_z(np.deg2rad(22.5)), [0.35,0.05,0.45])
+    T_link_camera = make_T(rot_y(np.deg2rad(-22.5)) @ rot_x(np.deg2rad(67.5)),[0.12,0.04,0.18])
+    
+    return CoordinateChain("base").add("base","link",T_base_link).add("link","camera",T_link_camera) 
 
 def camera_point_to_base(p_cam, chain: CoordinateChain | None = None) -> np.ndarray:
     """카메라 기준 좌표 -> base 기준 좌표. (3,) 와 (N,3) 모두 지원.
@@ -118,10 +148,41 @@ def camera_point_to_base(p_cam, chain: CoordinateChain | None = None) -> np.ndar
     chain 이 None 이면 default_chain() 을 쓴다.
     """
     # TODO: 문제 6-1
-    raise NotImplementedError("camera_point_to_base 를 구현하세요")
+    p_cam = np.asarray(p_cam)
+    # TODO: 문제 6-1
+    if chain == None:
+        chain = default_chain()
+    
+    T_base_cam = chain.T("base","camera")
+
+    if p_cam.ndim == 1:
+        p_cam = np.append(p_cam,1.0)
+        p_base = T_base_cam @ p_cam
+        return p_base[:3]
+    elif p_cam.ndim == 2:
+        N = p_cam.shape[0]
+        ones = np.ones((N,1))
+        p_cam_homo = np.hstack([p_cam,ones])
+
+        p_base = T_base_cam @ p_cam_homo
+
+        return p_base[:,:3]
 
 
 def base_point_to_camera(p_base, chain: CoordinateChain | None = None) -> np.ndarray:
     """base 기준 좌표 -> 카메라 기준 좌표. 왕복 검증(문제 6-2)에 쓴다."""
     # TODO: 문제 6-2
-    raise NotImplementedError("base_point_to_camera 를 구현하세요")
+    T_cam_base = chain.T("camera","base")
+
+    if p_base.ndim==1:
+        p_base = np.append(p_base,1.0)
+        p_cam = T_cam_base @ p_base
+        return p_cam[:3]
+    elif p_base.ndim==2:
+        N = p_base.shape[0]
+        ones = np.ones((N,1))
+        p_base_homo = np.hstack([p_base,ones])
+
+        p_cam = T_cam_base @ p_base_homo
+
+        return p_cam[:,:3]
