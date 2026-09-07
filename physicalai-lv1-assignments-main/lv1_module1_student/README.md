@@ -6,3 +6,5 @@
 | **센서** | 바퀴 엔코더 (Wheel Encoder) | 2 kHz (2,000 Hz) | 바퀴 회전 속도/거리 측정, 휠 오도메트리(Odometry) 생성 |
 | **구동** | 모터 드라이버 (Motor Driver) | - | 바퀴 구동 모터 속도 및 토크 제어 (CAN/UART/PWM) |
 | **통신** | LTE 모듈 | 100 Mbps (Ping/대역폭) | 원격 모니터링, 관제 서버 통신 및 주행 텔레메트리 송수신 |
+
+feature/compute-layout
